@@ -1,0 +1,5 @@
+{
+  "name": "Chat2PDF",
+  "description": "Convert your LLM conversations (ChatGPT, Claude, Gemini) into neatly formatted, professional PDF documents instantly.",
+  "requestFramePermissions": []
+}
