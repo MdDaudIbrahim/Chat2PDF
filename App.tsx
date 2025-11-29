@@ -14,6 +14,7 @@ const App: React.FC = () => {
   const [history, setHistory] = useState<ChatSession[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [mobileView, setMobileView] = useState<'input' | 'preview'>('input');
 
   useEffect(() => {
     setHistory(getHistory());
@@ -52,7 +53,8 @@ const App: React.FC = () => {
       const updatedHistory = saveSession(newSession);
       setHistory(updatedHistory);
       setStatus(ParsingStatus.SUCCESS);
-      // On mobile, close history if it was somehow open
+      // On mobile, switch to preview and close history
+      setMobileView('preview');
       setIsHistoryOpen(false);
     } catch (err: any) {
       setError(err.message || "Failed to parse conversation. Please check the format of your text.");
@@ -65,6 +67,7 @@ const App: React.FC = () => {
     setStatus(ParsingStatus.IDLE);
     setError(null);
     setIsHistoryOpen(false);
+    setMobileView('input');
   };
 
   const handleSelectHistory = (selectedSession: ChatSession) => {
@@ -72,6 +75,7 @@ const App: React.FC = () => {
     setIsHistoryOpen(false);
     setStatus(ParsingStatus.SUCCESS);
     setError(null);
+    setMobileView('preview');
   };
 
   const handleDeleteHistory = (id: string, e: React.MouseEvent) => {
@@ -131,6 +135,31 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-3">
+             {/* Mobile Tab Switcher */}
+             {session && (
+               <div className="lg:hidden flex items-center gap-1 bg-slate-100 p-1 rounded-lg mr-2">
+                 <button
+                   onClick={() => setMobileView('input')}
+                   className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                     mobileView === 'input'
+                       ? 'bg-white text-slate-900 shadow-sm'
+                       : 'text-slate-600 hover:text-slate-900'
+                   }`}
+                 >
+                   Input
+                 </button>
+                 <button
+                   onClick={() => setMobileView('preview')}
+                   className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                     mobileView === 'preview'
+                       ? 'bg-white text-slate-900 shadow-sm'
+                       : 'text-slate-600 hover:text-slate-900'
+                   }`}
+                 >
+                   Preview
+                 </button>
+               </div>
+             )}
              {session && (
                <Button 
                 onClick={handlePrint} 
@@ -158,8 +187,10 @@ const App: React.FC = () => {
 
   <div className="h-full flex flex-col lg:flex-row print:h-auto">
           
-          {/* Left Panel: Input - Hidden in Print */}
-          <div className="no-print w-full lg:w-[440px] xl:w-[500px] border-r border-slate-200/60 bg-white/50 backdrop-blur-sm p-5 lg:p-6 flex flex-col overflow-y-auto overscroll-contain z-20">
+          {/* Left Panel: Input - Hidden in Print, conditionally shown on mobile */}
+          <div className={`no-print w-full lg:w-[440px] xl:w-[500px] border-r border-slate-200/60 bg-white/50 backdrop-blur-sm p-5 lg:p-6 flex flex-col overflow-y-auto overscroll-contain z-20 ${
+            session && mobileView === 'preview' ? 'hidden lg:flex' : 'flex'
+          }`}>
             <div className="mb-5 flex-shrink-0">
               <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
@@ -184,8 +215,10 @@ const App: React.FC = () => {
             )}
           </div>
 
-          {/* Right Panel: Preview */}
-       <div className="flex-1 overflow-auto bg-gradient-to-br from-slate-50/50 via-transparent to-blue-50/30 p-6 lg:p-10 print:p-0 print:bg-white print:overflow-visible print:h-auto print:max-h-none">
+          {/* Right Panel: Preview - conditionally shown on mobile */}
+       <div className={`flex-1 overflow-auto bg-gradient-to-br from-slate-50/50 via-transparent to-blue-50/30 p-6 lg:p-10 print:p-0 print:bg-white print:overflow-visible print:h-auto print:max-h-none ${
+         session && mobileView === 'input' ? 'hidden lg:block' : 'block'
+       }`}>
          <div className="w-full max-w-[210mm] mx-auto print:max-w-full">
                <ChatPreview 
                   title={session?.title || "Untitled Conversation"} 

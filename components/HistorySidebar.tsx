@@ -22,7 +22,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="no-print fixed inset-y-0 left-0 w-80 bg-white border-r border-slate-200 shadow-2xl z-50 transform transition-transform duration-300 flex flex-col">
+    <div className="no-print fixed inset-y-0 left-0 w-full sm:w-80 bg-white border-r border-slate-200 shadow-2xl z-50 transform transition-transform duration-300 flex flex-col">
       <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
         <h2 className="font-semibold text-slate-800 flex items-center gap-2">
           <Clock className="w-4 h-4 text-brand-600" />

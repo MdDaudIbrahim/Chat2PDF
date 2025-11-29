@@ -20,7 +20,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onParse, isParsing }) => {
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
 
   return (
-    <div className="relative bg-white rounded-2xl shadow-lg border border-slate-200/60 flex flex-col h-full min-h-[520px] overflow-hidden transition-all duration-200 hover:shadow-2xl hover:border-slate-300/60">
+    <div className="relative bg-white rounded-2xl shadow-lg border border-slate-200/60 flex flex-col h-full min-h-[400px] lg:min-h-[520px] overflow-hidden transition-all duration-200 hover:shadow-2xl hover:border-slate-300/60">
       {/* Header */}
       <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-emerald-50/50 to-teal-50/50">
         <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-200/50">
@@ -48,7 +48,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onParse, isParsing }) => {
           </label>
           <div className="relative flex-1">
             <textarea
-              className={`flex-1 w-full h-full min-h-[320px] p-4 rounded-xl border-2 ${isFocused ? 'border-emerald-400 bg-white' : 'border-slate-200 bg-slate-50/50'} text-slate-800 placeholder:text-slate-400 focus:outline-none resize-none font-mono text-sm transition-all duration-200 leading-relaxed shadow-inner`}
+              className={`flex-1 w-full h-full min-h-[200px] lg:min-h-[320px] p-4 rounded-xl border-2 ${isFocused ? 'border-emerald-400 bg-white' : 'border-slate-200 bg-slate-50/50'} text-slate-800 placeholder:text-slate-400 focus:outline-none resize-none font-mono text-sm transition-all duration-200 leading-relaxed shadow-inner`}
               placeholder={`Example:
 
 You: How do I center a div in CSS?
