@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { HomePage } from './components/HomePage';
 import { ChatInput } from './components/ChatInput';
 import { ChatPreview } from './components/ChatPreview';
 import { Button } from './components/Button';
@@ -10,7 +9,6 @@ import { ChatSession, ParsingStatus } from './types';
 import { Sparkles, Printer, AlertCircle, Menu, Plus, Download } from 'lucide-react';
 
 const App: React.FC = () => {
-  const [showHomePage, setShowHomePage] = useState(true);
   const [status, setStatus] = useState<ParsingStatus>(ParsingStatus.IDLE);
   const [session, setSession] = useState<ChatSession | null>(null);
   const [history, setHistory] = useState<ChatSession[]>([]);
@@ -21,18 +19,6 @@ const App: React.FC = () => {
   useEffect(() => {
     setHistory(getHistory());
   }, []);
-
-  const handleGetStarted = () => {
-    setShowHomePage(false);
-  };
-
-  const handleBackToHome = () => {
-    setShowHomePage(true);
-    setSession(null);
-    setStatus(ParsingStatus.IDLE);
-    setError(null);
-    setIsHistoryOpen(false);
-  };
 
   const handleParse = async (rawText: string) => {
     setError(null);
@@ -103,13 +89,8 @@ const App: React.FC = () => {
     window.print();
   };
 
-  // Show homepage if user hasn't started
-  if (showHomePage) {
-    return <HomePage onGetStarted={handleGetStarted} />;
-  }
-
   return (
-    <div className="flex h-screen w-full overflow-hidden print:h-auto print:overflow-visible print:block">
+    <div className="flex h-screen w-full overflow-hidden">
       {/* History Sidebar - ChatGPT Style */}
       <HistorySidebar 
         history={history}
@@ -118,6 +99,7 @@ const App: React.FC = () => {
         onSelect={handleSelectHistory}
         onDelete={handleDeleteHistory}
         currentId={session?.id}
+        onNewChat={handleNewChat}
       />
 
       {/* Mobile Overlay */}
@@ -129,7 +111,7 @@ const App: React.FC = () => {
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden print:h-auto print:overflow-visible print:block">
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Top Navigation Bar */}
         <header className="no-print sticky top-0 z-10 w-full border-b border-border-light bg-surface-light/80 backdrop-blur-sm h-16">
           <div className="container mx-auto px-4 h-full">
@@ -144,18 +126,14 @@ const App: React.FC = () => {
                   <Menu className="w-5 h-5" />
                 </button>
                 
-                <button 
-                  onClick={handleBackToHome}
-                  className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-                  title="Back to Home"
-                >
+                <div className="flex items-center gap-3">
                   <div className="text-primary">
                     <svg className="h-7 w-7" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
                       <path clipRule="evenodd" d="M39.475 21.6262C40.358 21.4363 40.6863 21.5589 40.7581 21.5934C40.7876 21.655 40.8547 21.857 40.8082 22.3336C40.7408 23.0255 40.4502 24.0046 39.8572 25.2301C38.6799 27.6631 36.5085 30.6631 33.5858 33.5858C30.6631 36.5085 27.6632 38.6799 25.2301 39.8572C24.0046 40.4502 23.0255 40.7407 22.3336 40.8082C21.8571 40.8547 21.6551 40.7875 21.5934 40.7581C21.5589 40.6863 21.4363 40.358 21.6262 39.475C21.8562 38.4054 22.4689 36.9657 23.5038 35.2817C24.7575 33.2417 26.5497 30.9744 28.7621 28.762C30.9744 26.5497 33.2417 24.7574 35.2817 23.5037C36.9657 22.4689 38.4054 21.8562 39.475 21.6262ZM4.41189 29.2403L18.7597 43.5881C19.8813 44.7097 21.4027 44.9179 22.7217 44.7893C24.0585 44.659 25.5148 44.1631 26.9723 43.4579C29.9052 42.0387 33.2618 39.5667 36.4142 36.4142C39.5667 33.2618 42.0387 29.9052 43.4579 26.9723C44.1631 25.5148 44.659 24.0585 44.7893 22.7217C44.9179 21.4027 44.7097 19.8813 43.5881 18.7597L29.2403 4.41187C27.8527 3.02428 25.8765 3.02573 24.2861 3.36776C22.6081 3.72863 20.7334 4.58419 18.8396 5.74801C16.4978 7.18716 13.9881 9.18353 11.5858 11.5858C9.18354 13.988 7.18717 16.4978 5.74802 18.8396C4.58421 20.7334 3.72865 22.6081 3.36778 24.2861C3.02574 25.8765 3.02429 27.8527 4.41189 29.2403Z" fill="currentColor" fillRule="evenodd"/>
                     </svg>
                   </div>
                   <h2 className="text-xl font-bold tracking-tight">Chat2PDF</h2>
-                </button>
+                </div>
 
                 <button 
                   onClick={handleNewChat}
@@ -210,53 +188,51 @@ const App: React.FC = () => {
         </header>
 
         {/* Main Content Grid */}
-        <main className="flex-1 w-full overflow-y-auto print:overflow-visible print:h-auto bg-background-light">
-          <div className="container mx-auto px-4 py-8">
-            <div className="text-center mb-8 no-print">
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
-                Privacy-First AI Chat to PDF Converter
-              </h1>
-              <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto">
-                Paste your chat conversation from ChatGPT, Claude, Gemini, etc. The preview will update instantly.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start print:block print:h-auto">
-              {/* Left: Input Panel */}
-              <div className={`flex flex-col gap-4 no-print h-full ${
-                session && mobileView === 'preview' ? 'hidden lg:flex' : 'flex'
-              }`}>
-                <ChatInput 
-                  onParse={handleParse} 
-                  isParsing={status === ParsingStatus.PARSING}
-                />
-
-                {error && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold mb-1">Error Processing Input</p>
-                      <p className="text-xs">{error}</p>
-                    </div>
-                  </div>
-                )}
-
-                <p className="text-sm text-gray-500 text-center lg:text-left">
-                  Markdown and code blocks are supported.
+        <main className="flex-1 w-full overflow-hidden print-safe print:overflow-visible">
+          <div className="h-full grid grid-cols-1 lg:grid-cols-2 gap-8 p-4 lg:p-8 print:block print:p-0">
+            {/* Left: Input Panel */}
+            <div className={`flex flex-col gap-4 no-print ${
+              session && mobileView === 'preview' ? 'hidden lg:flex' : 'flex'
+            }`}>
+              <div className="text-center lg:text-left">
+                <h1 className="text-3xl lg:text-4xl font-bold tracking-tight mb-2">
+                  Privacy-First AI Chat to PDF Converter
+                </h1>
+                <p className="text-base text-gray-600 max-w-2xl">
+                  Paste your chat conversation from ChatGPT, Claude, Gemini, etc. The preview will update instantly.
                 </p>
               </div>
 
-              {/* Right: Preview Panel */}
-              <div className={`flex flex-col min-h-[600px] lg:min-h-[700px] ${
-                session && mobileView === 'input' ? 'hidden lg:flex' : 'flex'
-              } print:block print:overflow-visible`}>
-                <div className="flex-1 print:overflow-visible">
-                  <ChatPreview 
-                    title={session?.title || "Untitled Conversation"} 
-                    messages={session?.messages || []} 
-                    platform={session?.platform}
-                  />
+              <ChatInput 
+                onParse={handleParse} 
+                isParsing={status === ParsingStatus.PARSING}
+              />
+
+              {error && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold mb-1">Error Processing Input</p>
+                    <p className="text-xs">{error}</p>
+                  </div>
                 </div>
+              )}
+
+              <p className="text-sm text-gray-500 text-center lg:text-left">
+                Markdown and code blocks are supported. All processing happens locally in your browser.
+              </p>
+            </div>
+
+            {/* Right: Preview Panel */}
+            <div className={`flex flex-col h-full overflow-hidden ${
+              session && mobileView === 'input' ? 'hidden lg:flex' : 'flex'
+            } print:block print:overflow-visible`}>
+              <div className="flex-1 overflow-auto print:overflow-visible">
+                <ChatPreview 
+                  title={session?.title || "Untitled Conversation"} 
+                  messages={session?.messages || []} 
+                  platform={session?.platform}
+                />
               </div>
             </div>
           </div>

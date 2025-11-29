@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
+        darkMode: "class",
         theme: {
           extend: {
             fontFamily: {
@@ -17,100 +18,130 @@
               mono: ['JetBrains Mono', 'monospace'],
             },
             colors: {
-              brand: {
-                50: '#eff6ff',
-                100: '#dbeafe',
-                500: '#3b82f6',
-                600: '#2563eb',
-                700: '#1d4ed8',
-                900: '#1e3a8a',
-              }
+              primary: '#2b6cee',
+              'background-light': '#f6f6f8',
+              'background-dark': '#101622',
+              'surface-light': '#ffffff',
+              'surface-dark': '#2a2b2e',
+              'border-light': '#e5e7eb',
+              'border-dark': '#40414f',
             }
           }
         }
       }
     </script>
     <style>
-      /* Custom Print Styles to ensure the PDF looks perfect */
+      /* Custom Print Styles for Beautiful PDF Export */
       @media print {
         @page {
-          margin: 12mm 15mm;
+          margin: 10mm;
           size: A4;
         }
 
-        html, body, #root {
-          height: auto !important;
-          min-height: 0 !important;
-          overflow: visible !important;
-        }
-
-        body {
-          background-color: white;
-          font-size: 12pt;
-          line-height: 1.5;
-          /* Critical for printing background colors of chat bubbles */
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-        }
-
-        .print-safe,
-        .print-safe * {
-          overflow: visible !important;
-        }
-
-        .print-safe,
-        .print-safe > * {
-          height: auto !important;
-          min-height: 0 !important;
-        }
-
-        .no-print {
-          display: none !important;
-        }
-
-        .print-only {
-          display: block !important;
-        }
-
-        /* Reset for print area */
-        #print-area {
-          box-shadow: none !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          width: 100% !important;
-          max-width: none !important;
-          border: none !important;
-          border-radius: 0 !important;
-          height: auto !important;
-        }
-
-        /* Prevent awkward page breaks on smaller elements */
-        pre,
-        blockquote,
-        table,
-        code {
-          page-break-inside: avoid;
-          break-inside: avoid;
-        }
-
-        h1, h2, h3, h4, h5, h6 {
-          page-break-after: avoid;
-          break-after: avoid;
-        }
-
-        .message-card-header {
-          page-break-after: avoid;
-          break-after: avoid;
-        }
-
-        /* Ensure colors print correctly */
         * {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+
+        body {
+          background: white !important;
+          font-size: 10pt !important;
+          line-height: 1.4 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        /* Hide non-print elements */
+        .no-print,
+        header,
+        nav {
+          display: none !important;
+        }
+
+        /* CRITICAL: Allow multi-page printing */
+        html, body, #root {
+          height: auto !important;
+          min-height: auto !important;
+          max-height: none !important;
+          overflow: visible !important;
+        }
+
+        html, body, #root, main, div {
+          overflow: visible !important;
+        }
+
+        /* Force all containers to allow content flow */
+        .flex, .flex-1, .flex-col, .grid {
+          display: block !important;
+          height: auto !important;
+          min-height: auto !important;
+          overflow: visible !important;
+        }
+
+        .h-screen, .h-full, .min-h-screen {
+          height: auto !important;
+          min-height: auto !important;
+        }
+
+        .overflow-hidden, .overflow-y-auto, .overflow-auto {
+          overflow: visible !important;
+        }
+
+        /* Print area styling */
+        #print-area {
+          box-shadow: none !important;
+          border: none !important;
+          border-radius: 0 !important;
+          max-width: none !important;
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        /* Compact spacing for print */
+        #print-area p {
+          margin: 0 0 4px 0 !important;
+        }
+
+        #print-area pre {
+          margin: 5px 0 !important;
+          padding: 8px !important;
+          page-break-inside: avoid;
+        }
+
+        #print-area ul, #print-area ol {
+          margin: 4px 0 !important;
+          padding-left: 20px !important;
+        }
+
+        #print-area li {
+          margin: 2px 0 !important;
+        }
+
+        #print-area h1, #print-area h2, #print-area h3 {
+          margin: 6px 0 4px 0 !important;
+          page-break-after: avoid;
+        }
+
+        #print-area blockquote {
+          margin: 4px 0 !important;
+        }
+
+        /* Message blocks */
+        .message-card,
+        .message-block {
+          page-break-inside: avoid;
+          margin-bottom: 8px !important;
+        }
+
+        /* Remove visual effects */
+        * {
+          box-shadow: none !important;
+          text-shadow: none !important;
         }
       }
 
-      /* Better scrolling in preview */
       .break-inside-avoid {
         page-break-inside: avoid;
         break-inside: avoid;
@@ -130,8 +161,8 @@
 </script>
 <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-slate-50 text-slate-900 h-screen flex flex-col overflow-hidden">
-    <div id="root" class="h-full flex flex-col"></div>
+  <body class="bg-background-light text-gray-900 h-screen flex flex-col overflow-hidden font-sans print:h-auto print:overflow-visible">
+    <div id="root" class="h-full flex flex-col print:h-auto print:overflow-visible print:block"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
 </html>

@@ -86,7 +86,7 @@ export const ChatPreview: React.FC<ChatPreviewProps> = ({ title, messages, platf
   }
 
   return (
-    <div className="flex flex-col h-full print:h-auto print-safe">
+    <div className="print:h-auto print:overflow-visible">
       {/* Controls - Hidden in Print */}
       <div className="no-print mb-5 flex justify-end gap-2">
         <Button 
@@ -99,137 +99,61 @@ export const ChatPreview: React.FC<ChatPreviewProps> = ({ title, messages, platf
         </Button>
       </div>
 
-  {/* Document Canvas - Premium PDF Style */}
-  <div id="print-area" className="bg-white shadow-2xl rounded-3xl border border-slate-200/80 mx-auto w-full max-w-[210mm] print:shadow-none print:w-full print:max-w-none print:rounded-none print:border-0 overflow-hidden transition-shadow duration-300 hover:shadow-3xl">
+      {/* Document Canvas - Clean PDF Style */}
+      <div id="print-area" className="bg-white shadow-2xl rounded-3xl border border-slate-200/80 mx-auto w-full max-w-[210mm] overflow-auto transition-shadow duration-300 hover:shadow-3xl">
         
-        {/* Document Header */}
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white px-10 py-8 print:bg-slate-800 relative overflow-hidden">
-          <div className="absolute inset-0 bg-grid-white/5"></div>
-          <div className="relative flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-3">
-                <FileText className="w-4 h-4 text-slate-400" />
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">{platform}</span>
-              </div>
-              <h1 className="text-3xl font-extrabold tracking-tight leading-tight mb-3">{title}</h1>
-              <p className="text-slate-400 text-sm flex items-center gap-3">
-                <span>{date}</span>
-                <span className="w-1 h-1 bg-slate-500 rounded-full"></span>
-                <span>{messages.length} messages</span>
-              </p>
-            </div>
-            <div className="w-14 h-14 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/10 shadow-xl">
-              <MessageSquare className="w-7 h-7 text-white/90" />
-            </div>
+        {/* Document Header - Simple & Clean */}
+        <div className="px-8 py-4 border-b-2 border-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-1">{title}</h1>
+          <div className="flex items-center gap-3 text-sm text-slate-600">
+            <span>{date}</span>
+            <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+            <span>{messages.length} messages</span>
+            <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
+            <span>{totalWords.toLocaleString()} words</span>
           </div>
         </div>
 
-        {/* Quick Summary */}
-        <div className="px-10 py-8 bg-gradient-to-br from-slate-50/50 to-white border-b border-slate-200/60 print:border-slate-200">
-          <div className="grid grid-cols-4 gap-4">
-            <div className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-sm hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200/50">
-                  <Users className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Participants</span>
-              </div>
-              <p className="text-2xl font-extrabold text-slate-900 tracking-tight">{participants}</p>
-            </div>
+        {/* Chat Messages - Clean Layout */}
+        <div className="px-8 py-4 space-y-3">
+          {messages.map((msg, index) => {
+            const isUser = msg.role === MessageRole.USER;
+            const roleLabel = msg.role === MessageRole.SYSTEM ? 'System' : isUser ? 'You' : 'Assistant';
             
-            <div className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-sm hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-200/50">
-                  <MessageSquare className="w-5 h-5 text-white" />
+            return (
+              <article key={index} className="message-block message-card border-l-4 pl-4" style={{
+                borderLeftColor: isUser ? '#64748b' : '#10b981'
+              }}>
+                {/* Simple Header */}
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-bold" style={{
+                    color: isUser ? '#64748b' : '#10b981'
+                  }}>{roleLabel}</span>
+                  <span className="text-xs text-slate-400">•</span>
+                  <span className="text-xs text-slate-400">Message {index + 1}</span>
                 </div>
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Messages</span>
-              </div>
-              <p className="text-2xl font-extrabold text-slate-900 tracking-tight">{messages.length}</p>
-            </div>
-            
-            <div className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-sm hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-200/50">
-                  <Type className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Words</span>
-              </div>
-              <p className="text-2xl font-extrabold text-slate-900 tracking-tight">{totalWords.toLocaleString()}</p>
-            </div>
-            
-            <div className="bg-white rounded-2xl p-5 border border-slate-200/60 shadow-sm hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-200/50">
-                  <Clock className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Reading Time</span>
-              </div>
-              <p className="text-2xl font-extrabold text-slate-900 tracking-tight">~{readingMinutes}<span className="text-lg text-slate-500 ml-1">min</span></p>
-            </div>
-          </div>
-        </div>
-
-        {/* Transcript Intro */}
-        <section className="px-10 pt-10 pb-6 bg-white">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full"></div>
-            <h2 className="text-sm font-extrabold uppercase tracking-[0.2em] text-slate-900">Transcript</h2>
-          </div>
-          <p className="text-xl font-semibold text-slate-900 leading-relaxed">Chronological log of the imported conversation</p>
-          <p className="text-sm text-slate-500 mt-2 leading-relaxed">Messages are ordered from earliest to latest with clear role indicators.</p>
-        </section>
-
-        {/* Chat Messages */}
-        <div className="px-10 py-10 space-y-6 print:space-y-5">
-          <div className="relative">
-            <div className="hidden md:block absolute left-5 top-0 bottom-0 w-px bg-gradient-to-b from-slate-200 via-slate-300 to-slate-200" aria-hidden="true"></div>
-            <div className="space-y-6">
-              {messages.map((msg, index) => {
-                const isUser = msg.role === MessageRole.USER;
-                const roleLabel = msg.role === MessageRole.SYSTEM ? 'System' : isUser ? 'You' : 'Assistant';
-                const accentCard = isUser ? 'border-slate-200/80 bg-white hover:shadow-xl' : 'border-emerald-200/80 bg-gradient-to-br from-emerald-50/40 to-white hover:shadow-xl hover:shadow-emerald-100/50';
-                const avatarStyles = isUser 
-                  ? 'bg-gradient-to-br from-slate-700 to-slate-900 shadow-lg shadow-slate-300/50' 
-                  : 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-300/50';
-                return (
-                  <article key={index} className="relative md:pl-14 message-block message-card group">
-                    <div className="hidden md:flex absolute left-0 top-8 -translate-x-1/2 transition-transform duration-200 group-hover:scale-125">
-                      <div className={`w-4 h-4 rounded-full ${isUser ? 'bg-slate-700 border-2 border-white shadow-lg shadow-slate-300/50' : 'bg-emerald-500 border-2 border-white shadow-lg shadow-emerald-300/50'}`}></div>
-                    </div>
-                    <div className={`rounded-2xl border-2 shadow-lg transition-all duration-200 ${accentCard}`}>
-                      <div className={`message-card-header flex flex-wrap items-center justify-between gap-3 px-6 py-4`}>
-                        <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white transition-transform duration-200 group-hover:scale-110 ${avatarStyles}`}>
-                            {isUser ? <User size={20} strokeWidth={2.5} /> : <Bot size={20} strokeWidth={2.5} />}
-                          </div>
-                          <div>
-                            <p className="text-sm font-extrabold tracking-tight text-slate-900">{roleLabel}</p>
-                            <p className="text-xs text-slate-400 font-medium tracking-wide">Message {index + 1} of {messages.length}</p>
-                          </div>
-                        </div>
-                        <div className="text-xs font-semibold text-slate-400 tracking-wider uppercase px-3 py-1.5 rounded-full bg-slate-100">{platform}</div>
-                      </div>
-                      <div className="px-6 py-6">
-                        <div className="prose prose-sm max-w-none prose-slate">
-                          <ReactMarkdown 
+                
+                {/* Message Content */}
+                <div className="prose prose-sm max-w-none prose-slate">
+                  <ReactMarkdown 
                             components={{
-                              p: ({children}) => <p className="mb-3 last:mb-0 leading-relaxed text-slate-700">{children}</p>,
-                              h1: ({children}) => <h1 className="text-xl font-bold text-slate-900 mb-3 mt-4 first:mt-0">{children}</h1>,
-                              h2: ({children}) => <h2 className="text-lg font-bold text-slate-900 mb-2 mt-4 first:mt-0">{children}</h2>,
-                              h3: ({children}) => <h3 className="text-base font-semibold text-slate-900 mb-2 mt-3 first:mt-0">{children}</h3>,
-                              ul: ({children}) => <ul className="list-disc list-inside mb-3 space-y-1 text-slate-700">{children}</ul>,
-                              ol: ({children}) => <ol className="list-decimal list-inside mb-3 space-y-1 text-slate-700">{children}</ol>,
-                              li: ({children}) => <li className="leading-relaxed">{children}</li>,
+                              p: ({children}) => <p className="mb-1 print:mb-0.5 last:mb-0 leading-normal print:leading-snug text-slate-700">{children}</p>,
+                              h1: ({children}) => <h1 className="text-xl font-bold text-slate-900 mb-1 mt-2 print:mt-1 first:mt-0">{children}</h1>,
+                              h2: ({children}) => <h2 className="text-lg font-bold text-slate-900 mb-1 mt-2 print:mt-1 first:mt-0">{children}</h2>,
+                              h3: ({children}) => <h3 className="text-base font-semibold text-slate-900 mb-1 mt-1.5 print:mt-1 first:mt-0">{children}</h3>,
+                              ul: ({children}) => <ul className="list-disc list-inside mb-1.5 print:mb-1 space-y-0.5 text-slate-700">{children}</ul>,
+                              ol: ({children}) => <ol className="list-decimal list-inside mb-1.5 print:mb-1 space-y-0.5 text-slate-700">{children}</ol>,
+                              li: ({children}) => <li className="leading-normal print:leading-snug">{children}</li>,
                               strong: ({children}) => <strong className="font-semibold text-slate-900">{children}</strong>,
                               em: ({children}) => <em className="italic">{children}</em>,
                               blockquote: ({children}) => (
-                                <blockquote className="border-l-4 border-slate-300 pl-4 my-3 italic text-slate-600">
+                                <blockquote className="border-l-4 border-slate-300 pl-4 my-1.5 print:my-1 italic text-slate-600">
                                   {children}
                                 </blockquote>
                               ),
                               code: ({node, inline, className, children, ...props}: any) => {
                                 return !inline ? (
-                                  <div className="bg-slate-900 text-slate-100 p-4 rounded-lg my-4 overflow-x-auto font-mono text-xs leading-relaxed print:bg-slate-900 print:text-white break-inside-avoid">
+                                  <div className="bg-slate-900 text-slate-100 p-3 print:p-2 rounded-lg my-2 print:my-1.5 overflow-x-auto font-mono text-xs leading-normal print:leading-snug print:bg-slate-900 print:text-white break-inside-avoid">
                                     <pre className="whitespace-pre-wrap break-words">
                                       <code className={className} {...props}>
                                         {children}
@@ -247,9 +171,9 @@ export const ChatPreview: React.FC<ChatPreviewProps> = ({ title, messages, platf
                                   {children}
                                 </a>
                               ),
-                              hr: () => <hr className="my-4 border-slate-200" />,
+                              hr: () => <hr className="my-2 print:my-1 border-slate-200" />,
                               table: ({children}) => (
-                                <div className="overflow-x-auto my-4">
+                                <div className="overflow-x-auto my-2 print:my-1.5">
                                   <table className="min-w-full border border-slate-200 rounded-lg overflow-hidden">
                                     {children}
                                   </table>
@@ -258,23 +182,19 @@ export const ChatPreview: React.FC<ChatPreviewProps> = ({ title, messages, platf
                               th: ({children}) => <th className="bg-slate-100 px-4 py-2 text-left text-sm font-semibold text-slate-700 border-b border-slate-200">{children}</th>,
                               td: ({children}) => <td className="px-4 py-2 text-sm text-slate-700 border-b border-slate-100">{children}</td>,
                             }}
-                          >
-                            {msg.content}
-                          </ReactMarkdown>
-                        </div>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </div>
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
+                </div>
+              </article>
+            );
+          })}
         </div>
 
-        {/* Document Footer */}
-  <div className="border-t border-slate-100 px-8 py-4 bg-slate-50/50 print:bg-white">
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <span>Generated by Chat2PDF</span>
+        {/* Document Footer - Simple */}
+        <div className="border-t border-slate-200 px-8 py-3">
+          <div className="flex items-center justify-between text-xs text-slate-500">
+            <span>Chat2PDF</span>
             <span>{date}</span>
           </div>
         </div>
