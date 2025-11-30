@@ -88,11 +88,11 @@ export const ChatPreview: React.FC<ChatPreviewProps> = ({ title, messages, platf
   return (
     <div className="print:h-auto print:overflow-visible">
       {/* Controls - Hidden in Print */}
-      <div className="no-print mb-5 flex justify-end gap-2">
+      <div className="no-print mb-4 flex justify-center sm:justify-end">
         <Button 
           variant="ghost" 
           onClick={handleReadAloud}
-          className={`transition-all duration-200 ${isSpeaking ? "text-red-600 bg-red-50 hover:bg-red-100 shadow-sm" : "text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:shadow-md"}`}
+          className={`transition-all duration-200 px-4 py-2.5 rounded-xl ${isSpeaking ? "text-red-600 bg-red-50 hover:bg-red-100 shadow-sm" : "text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:shadow-md"}`}
           icon={isSpeaking ? <Square className="w-4 h-4 fill-current" /> : <Volume2 className="w-4 h-4" />}
         >
           {isSpeaking ? "Stop" : "Read Aloud"}
