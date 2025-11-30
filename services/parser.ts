@@ -178,11 +178,288 @@ function cleanMessageContent(content: string): string {
   // Remove common junk that gets mixed into messages
   let cleaned = content
     .replace(/^(Skip to content|Chat history)\s*/gi, '')
-    .replace(/\s*(Copy code|Copied!?)\s*/gi, ' ')
+    .replace(/\s*(Copy code|Copied!?)\s*/gi, '\n')
     .replace(/\s*(Read aloud|Stop generating)\s*/gi, ' ')
     .trim();
   
+  // Detect and wrap code blocks that aren't already in markdown fences
+  cleaned = detectAndWrapCodeBlocks(cleaned);
+  
   return cleaned;
+}
+
+// Detect code patterns and wrap them in markdown code fences
+function detectAndWrapCodeBlocks(content: string): string {
+  // If content already has markdown code fences, return as-is
+  if (/```[\s\S]*```/.test(content)) {
+    return content;
+  }
+
+  const lines = content.split('\n');
+  const result: string[] = [];
+  let inCodeBlock = false;
+  let codeBlockLines: string[] = [];
+  let consecutiveNonCodeLines = 0;
+
+  // Strong code indicators - these almost certainly indicate code
+  const strongCodeIndicators = [
+    // C# / .NET
+    /^\s*(using\s+System|namespace\s+\w|class\s+\w+\s*[:{]|interface\s+\w+|public\s+class|private\s+class|protected\s+class|internal\s+class)/,
+    /^\s*(public|private|protected|internal)\s+(static\s+)?(void|int|string|bool|double|float|decimal|var|async|Task|List|Dictionary|IEnumerable)/,
+    /\{\s*get;\s*set;\s*\}/, // Auto-properties
+    /^\s*(Console|Debug|Trace)\.(Write|Read|Print)/,
+    
+    // Java
+    /^\s*(public|private|protected)\s+(static\s+)?(void|int|String|boolean|double|float|class|interface)\s+\w+/,
+    /^\s*System\.out\.print/,
+    /^\s*import\s+java\./,
+    
+    // Python
+    /^\s*def\s+\w+\s*\([^)]*\)\s*:/,
+    /^\s*class\s+\w+\s*(\([^)]*\))?\s*:/,
+    /^\s*(from\s+\w+\s+)?import\s+\w+/,
+    /^\s*print\s*\(/,
+    /^\s*if\s+.*:\s*$/,
+    /^\s*(elif|else)\s*:/,
+    /^\s*for\s+\w+\s+in\s+.*:/,
+    /^\s*while\s+.*:/,
+    /^\s*try\s*:/,
+    /^\s*(except|finally)\s*.*:/,
+    /^\s*return\s+/,
+    /^\s*@\w+/,  // Decorators
+    
+    // JavaScript / TypeScript
+    /^\s*(const|let|var)\s+\w+\s*=/,
+    /^\s*(function|async\s+function)\s+\w+\s*\(/,
+    /^\s*(export|import)\s+(default\s+)?(const|let|var|function|class|interface|type)/,
+    /^\s*console\.(log|error|warn|info|debug)\s*\(/,
+    /=>\s*\{/,  // Arrow functions
+    /^\s*(interface|type)\s+\w+\s*[={<]/,
+    
+    // C / C++
+    /^\s*#include\s*[<"]/,
+    /^\s*#define\s+\w+/,
+    /^\s*(int|void|char|float|double|bool)\s+main\s*\(/,
+    /^\s*printf\s*\(/,
+    /^\s*scanf\s*\(/,
+    /^\s*std::/,
+    /^\s*cout\s*<</,
+    /^\s*cin\s*>>/,
+    
+    // SQL
+    /^\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|TRUNCATE)\s+/i,
+    /^\s*(FROM|WHERE|JOIN|LEFT JOIN|RIGHT JOIN|INNER JOIN|ORDER BY|GROUP BY|HAVING)\s+/i,
+    
+    // HTML/XML/JSX
+    /^\s*<[a-zA-Z][a-zA-Z0-9]*(\s+[^>]*)?>.*<\/[a-zA-Z][a-zA-Z0-9]*>\s*$/,
+    /^\s*<[a-zA-Z][a-zA-Z0-9]*(\s+[^>]*)?\/>\s*$/,
+    /^\s*<\/?[a-zA-Z][a-zA-Z0-9]*[^>]*>\s*$/,
+    
+    // CSS
+    /^\s*\.[a-zA-Z][\w-]*\s*\{/,
+    /^\s*#[a-zA-Z][\w-]*\s*\{/,
+    /^\s*@(media|keyframes|import|font-face)/,
+    
+    // Shell / Bash
+    /^\s*\$\s+\w+/,
+    /^\s*(echo|cd|ls|mkdir|rm|cp|mv|cat|grep|sed|awk|chmod|chown)\s+/,
+    /^\s*#!\/bin\/(bash|sh|zsh)/,
+    
+    // Go
+    /^\s*package\s+\w+/,
+    /^\s*func\s+(\([^)]+\)\s*)?\w+\s*\(/,
+    /^\s*import\s+\(/,
+    /^\s*fmt\.(Print|Scan)/,
+    
+    // Rust
+    /^\s*fn\s+\w+\s*\(/,
+    /^\s*let\s+(mut\s+)?\w+\s*[=:]/,
+    /^\s*use\s+\w+::/,
+    /^\s*impl\s+/,
+    /^\s*pub\s+(fn|struct|enum|trait)/,
+    
+    // Ruby
+    /^\s*def\s+\w+/,
+    /^\s*end\s*$/,
+    /^\s*puts\s+/,
+    /^\s*require\s+['"]/,
+    
+    // PHP
+    /^\s*<\?php/,
+    /^\s*\$\w+\s*=/,
+    /^\s*(echo|print|var_dump|print_r)\s+/,
+    /^\s*function\s+\w+\s*\(/,
+  ];
+
+  // Weak code indicators - need multiple of these together
+  const weakCodeIndicators = [
+    /^\s*[\{\}]\s*$/,  // Just braces
+    /^\s*[\[\]]\s*$/,  // Just brackets
+    /^\s*[();,]\s*$/,  // Just punctuation
+    /^\s*\/\/.*$/,     // Single line comment
+    /^\s*#(?!include|define|!).*$/,  // Hash comment (not preprocessor or shebang)
+    /^\s*\/\*|\*\/\s*$/,  // Multi-line comment markers
+    /^\s*\*\s+/,       // Javadoc-style comment continuation
+    /^\s*\w+\s*\([^)]*\)\s*[;{]?\s*$/,  // Function call or definition
+    /^\s*\w+\.\w+\s*\(/,  // Method call
+    /^\s*\w+\s+\w+\s*=\s*.+;?\s*$/,  // Variable assignment with type
+    /^\s*\w+\s*=\s*.+;?\s*$/,  // Simple assignment
+    /^\s*return\s*;?\s*$/,  // Return statement
+    /^\s*break\s*;?\s*$/,
+    /^\s*continue\s*;?\s*$/,
+    /;\s*$/,  // Ends with semicolon
+    /^\s+\S/,  // Indented line (starts with whitespace)
+  ];
+
+  const languageHints: { pattern: RegExp; lang: string }[] = [
+    { pattern: /Console\.(Write|Read)|using\s+System|namespace\s+\w|\{\s*get;\s*set;\s*\}|public\s+(class|interface|enum|struct)/, lang: 'csharp' },
+    { pattern: /System\.out\.print|public\s+static\s+void\s+main|import\s+java\./, lang: 'java' },
+    { pattern: /def\s+\w+.*:|print\s*\(|import\s+\w+|from\s+\w+\s+import|if\s+.*:$|for\s+\w+\s+in/, lang: 'python' },
+    { pattern: /console\.(log|error|warn)|const\s+\w+\s*=|let\s+\w+\s*=|=>\s*[\{(]|require\s*\(|module\.exports/, lang: 'javascript' },
+    { pattern: /interface\s+\w+\s*\{|type\s+\w+\s*=|:\s*(string|number|boolean|any)\b/, lang: 'typescript' },
+    { pattern: /<html|<div|<span|<p\s*>|className=|onClick=/, lang: 'html' },
+    { pattern: /SELECT\s+.*FROM|INSERT\s+INTO|CREATE\s+TABLE|ALTER\s+TABLE/i, lang: 'sql' },
+    { pattern: /#include|printf\s*\(|scanf\s*\(|int\s+main\s*\(/, lang: 'c' },
+    { pattern: /cout\s*<<|cin\s*>>|std::|#include\s*<iostream>/, lang: 'cpp' },
+    { pattern: /func\s+\w+|package\s+main|fmt\.(Print|Scan)|import\s+\(/, lang: 'go' },
+    { pattern: /fn\s+\w+|let\s+mut|use\s+\w+::|impl\s+\w+/, lang: 'rust' },
+    { pattern: /\$\w+\s*=|<\?php|echo\s+|function\s+\w+\s*\(.*\)\s*\{/, lang: 'php' },
+    { pattern: /^\s*\.[a-zA-Z][\w-]*\s*\{|@media|@keyframes/, lang: 'css' },
+    { pattern: /^#!\/bin\/(bash|sh)|echo\s+|^\$\s+/, lang: 'bash' },
+  ];
+
+  function hasStrongCodeIndicator(line: string): boolean {
+    return strongCodeIndicators.some(pattern => pattern.test(line));
+  }
+
+  function hasWeakCodeIndicator(line: string): boolean {
+    return weakCodeIndicators.some(pattern => pattern.test(line));
+  }
+
+  function looksLikeCode(line: string): boolean {
+    const trimmed = line.trim();
+    if (!trimmed) return false; // Empty lines are neutral
+    return hasStrongCodeIndicator(trimmed) || hasWeakCodeIndicator(trimmed);
+  }
+
+  function isDefinitelyNotCode(line: string): boolean {
+    const trimmed = line.trim();
+    if (!trimmed) return false;
+    
+    // Natural language patterns
+    const naturalLanguagePatterns = [
+      /^(This|That|The|A|An|It|Here|There|When|Where|What|Why|How|If|For|To|In|On|At|By|With|From|As|Is|Are|Was|Were|Has|Have|Had|Will|Would|Can|Could|Should|May|Might|Must|Do|Does|Did)\s+/i,
+      /\?$/,  // Questions
+      /^[A-Z][a-z]+\s+[a-z]+\s+[a-z]+/,  // Natural sentence pattern
+      /^\d+\.\s+[A-Z]/,  // Numbered list items
+      /^[-•]\s+[A-Z]/,   // Bullet points
+      /^(Note|Warning|Tip|Important|Example|Output|Result|Summary|Explanation)[:.]?\s*/i,
+    ];
+    
+    // If it matches natural language AND doesn't have code indicators
+    if (naturalLanguagePatterns.some(p => p.test(trimmed)) && !hasStrongCodeIndicator(trimmed)) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  function detectLanguage(codeLines: string[]): string {
+    const codeText = codeLines.join('\n');
+    for (const { pattern, lang } of languageHints) {
+      if (pattern.test(codeText)) {
+        return lang;
+      }
+    }
+    return '';
+  }
+
+  function shouldStartCodeBlock(lineIndex: number): boolean {
+    const line = lines[lineIndex];
+    if (hasStrongCodeIndicator(line)) return true;
+    
+    // Check if multiple consecutive lines look like code
+    let codeScore = 0;
+    for (let i = lineIndex; i < Math.min(lineIndex + 4, lines.length); i++) {
+      const checkLine = lines[i].trim();
+      if (!checkLine) continue;
+      if (hasStrongCodeIndicator(lines[i])) codeScore += 2;
+      else if (hasWeakCodeIndicator(lines[i])) codeScore += 1;
+      else if (isDefinitelyNotCode(lines[i])) codeScore -= 2;
+    }
+    return codeScore >= 3;
+  }
+
+  function flushCodeBlock() {
+    if (codeBlockLines.length > 0) {
+      // Only wrap if we have meaningful code (not just braces or empty lines)
+      const meaningfulLines = codeBlockLines.filter(l => l.trim() && !/^[\{\}\[\]\(\)]+$/.test(l.trim()));
+      if (meaningfulLines.length >= 1) {
+        const lang = detectLanguage(codeBlockLines);
+        result.push('```' + lang);
+        result.push(...codeBlockLines);
+        result.push('```');
+      } else {
+        // Not enough meaningful code, just add as regular text
+        result.push(...codeBlockLines);
+      }
+    }
+    codeBlockLines = [];
+    inCodeBlock = false;
+    consecutiveNonCodeLines = 0;
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    
+    // Already in markdown code fence
+    if (trimmed.startsWith('```')) {
+      if (inCodeBlock) flushCodeBlock();
+      result.push(line);
+      continue;
+    }
+
+    if (!inCodeBlock) {
+      if (shouldStartCodeBlock(i)) {
+        inCodeBlock = true;
+        codeBlockLines = [line];
+        consecutiveNonCodeLines = 0;
+      } else {
+        result.push(line);
+      }
+    } else {
+      // In code block - check if we should continue or end
+      if (trimmed === '') {
+        // Empty line - include in code block but track
+        codeBlockLines.push(line);
+      } else if (looksLikeCode(line)) {
+        codeBlockLines.push(line);
+        consecutiveNonCodeLines = 0;
+      } else if (isDefinitelyNotCode(line)) {
+        consecutiveNonCodeLines++;
+        if (consecutiveNonCodeLines >= 1) {
+          // Definitely not code - end the block
+          flushCodeBlock();
+          result.push(line);
+        } else {
+          codeBlockLines.push(line);
+        }
+      } else {
+        // Ambiguous - include but track
+        codeBlockLines.push(line);
+        consecutiveNonCodeLines++;
+        if (consecutiveNonCodeLines >= 2) {
+          flushCodeBlock();
+        }
+      }
+    }
+  }
+
+  // Handle remaining code block
+  flushCodeBlock();
+
+  return result.join('\n');
 }
 
 export function parseConversationLocal(input: string): ParseResult {

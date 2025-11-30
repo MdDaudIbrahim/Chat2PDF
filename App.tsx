@@ -10,24 +10,47 @@ import { ChatSession, ParsingStatus } from './types';
 import { Sparkles, Printer, AlertCircle, Menu, Plus, Download } from 'lucide-react';
 
 const App: React.FC = () => {
-  const [showHomePage, setShowHomePage] = useState(true);
+  const [showHomePage, setShowHomePage] = useState(() => {
+    // Check if URL has #app hash to show converter directly
+    return window.location.hash !== '#app';
+  });
   const [status, setStatus] = useState<ParsingStatus>(ParsingStatus.IDLE);
   const [session, setSession] = useState<ChatSession | null>(null);
   const [history, setHistory] = useState<ChatSession[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [mobileView, setMobileView] = useState<'input' | 'preview'>('input');
 
   useEffect(() => {
     setHistory(getHistory());
   }, []);
 
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      const isApp = window.location.hash === '#app';
+      setShowHomePage(!isApp);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const handleGetStarted = () => {
+    // Push to browser history so back button works
+    window.history.pushState({ page: 'app' }, '', '#app');
     setShowHomePage(false);
   };
 
   const handleBackToHome = () => {
-    setShowHomePage(true);
+    // Go back in history or update hash
+    if (window.history.state?.page === 'app') {
+      window.history.back();
+    } else {
+      window.history.pushState({ page: 'home' }, '', '/');
+      setShowHomePage(true);
+    }
     setSession(null);
     setStatus(ParsingStatus.IDLE);
     setError(null);
@@ -117,13 +140,16 @@ const App: React.FC = () => {
         onClose={() => setIsHistoryOpen(false)}
         onSelect={handleSelectHistory}
         onDelete={handleDeleteHistory}
+        onNewChat={handleNewChat}
         currentId={session?.id}
+        isCollapsed={isSidebarCollapsed}
+        onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
       />
 
       {/* Mobile Overlay */}
       {isHistoryOpen && (
         <div 
-          className="fixed inset-0 bg-black/30 z-30 lg:hidden backdrop-blur-sm transition-opacity duration-200 no-print" 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm transition-opacity duration-200 no-print" 
           onClick={() => setIsHistoryOpen(false)}
         />
       )}
@@ -157,12 +183,13 @@ const App: React.FC = () => {
                   <h2 className="text-xl font-bold tracking-tight">Chat2PDF</h2>
                 </button>
 
+                {/* New button - only on mobile/tablet */}
                 <button 
                   onClick={handleNewChat}
-                  className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200"
+                  className="lg:hidden flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>New</span>
+                  <span className="hidden sm:inline">New</span>
                 </button>
               </div>
 

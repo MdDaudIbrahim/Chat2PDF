@@ -31,114 +31,122 @@
       }
     </script>
     <style>
-      /* Custom Print Styles for Beautiful PDF Export */
+      /* Print Styles */
       @media print {
         @page {
-          margin: 10mm;
+          margin: 8mm;
           size: A4;
         }
 
+        /* Preserve colors */
         * {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
           color-adjust: exact !important;
         }
 
-        body {
-          background: white !important;
-          font-size: 10pt !important;
-          line-height: 1.4 !important;
+        /* Reset everything */
+        html, body, #root {
           margin: 0 !important;
           padding: 0 !important;
+          height: auto !important;
+          min-height: auto !important;
+          max-height: none !important;
+          overflow: visible !important;
+          background: white !important;
+          display: block !important;
         }
 
         /* Hide non-print elements */
         .no-print,
         header,
-        nav {
+        nav,
+        button,
+        .shadow-2xl,
+        .shadow-xl {
+          box-shadow: none !important;
+        }
+
+        /* Use display:none for hiding - cleaner */
+        .no-print {
           display: none !important;
         }
 
-        /* CRITICAL: Allow multi-page printing */
-        html, body, #root {
-          height: auto !important;
-          min-height: auto !important;
-          max-height: none !important;
-          overflow: visible !important;
-        }
-
-        html, body, #root, main, div {
-          overflow: visible !important;
-        }
-
-        /* Force all containers to allow content flow */
-        .flex, .flex-1, .flex-col, .grid {
-          display: block !important;
-          height: auto !important;
-          min-height: auto !important;
-          overflow: visible !important;
-        }
-
-        .h-screen, .h-full, .min-h-screen {
-          height: auto !important;
-          min-height: auto !important;
-        }
-
-        .overflow-hidden, .overflow-y-auto, .overflow-auto {
-          overflow: visible !important;
-        }
-
-        /* Print area styling */
+        /* Print area - full width, no decorations */
         #print-area {
-          box-shadow: none !important;
-          border: none !important;
-          border-radius: 0 !important;
-          max-width: none !important;
+          position: static !important;
+          display: block !important;
+          visibility: visible !important;
           width: 100% !important;
+          max-width: 100% !important;
           margin: 0 !important;
           padding: 0 !important;
-        }
-
-        /* Compact spacing for print */
-        #print-area p {
-          margin: 0 0 4px 0 !important;
-        }
-
-        #print-area pre {
-          margin: 5px 0 !important;
-          padding: 8px !important;
-          page-break-inside: avoid;
-        }
-
-        #print-area ul, #print-area ol {
-          margin: 4px 0 !important;
-          padding-left: 20px !important;
-        }
-
-        #print-area li {
-          margin: 2px 0 !important;
-        }
-
-        #print-area h1, #print-area h2, #print-area h3 {
-          margin: 6px 0 4px 0 !important;
-          page-break-after: avoid;
-        }
-
-        #print-area blockquote {
-          margin: 4px 0 !important;
-        }
-
-        /* Message blocks */
-        .message-card,
-        .message-block {
-          page-break-inside: avoid;
-          margin-bottom: 8px !important;
-        }
-
-        /* Remove visual effects */
-        * {
+          border: none !important;
+          border-radius: 0 !important;
           box-shadow: none !important;
-          text-shadow: none !important;
+          background: white !important;
+        }
+
+        #print-area * {
+          visibility: visible !important;
+        }
+
+        /* Messages container */
+        #print-area > div {
+          padding: 2mm 0 !important;
+          margin: 0 !important;
+        }
+
+        /* Message blocks - allow breaking inside long ones */
+        .message-block {
+          margin-bottom: 3mm !important;
+          page-break-inside: auto !important;
+        }
+
+        /* Code blocks - avoid breaking if possible but allow if too long */
+        pre, code {
+          page-break-inside: auto !important;
+          white-space: pre-wrap !important;
+          word-wrap: break-word !important;
+        }
+
+        /* Hide hr completely */
+        hr {
+          display: none !important;
+          visibility: hidden !important;
+          height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          border: none !important;
+        }
+
+        /* Headings should stay with following content */
+        h1, h2, h3, h4, h5, h6 {
+          page-break-after: avoid !important;
+          margin-top: 2mm !important;
+          margin-bottom: 1mm !important;
+        }
+
+        /* Compact text */
+        p {
+          margin: 0 0 1mm 0 !important;
+          line-height: 1.4 !important;
+        }
+
+        ul, ol {
+          margin: 1mm 0 !important;
+          padding-left: 5mm !important;
+        }
+
+        li {
+          margin: 0.5mm 0 !important;
+        }
+
+        /* Footer */
+        #print-area > div:last-child {
+          padding: 2mm 0 !important;
+          border-top: 1px solid #e5e7eb !important;
+          margin-top: 2mm !important;
         }
       }
 

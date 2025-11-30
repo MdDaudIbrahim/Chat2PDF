@@ -100,37 +100,23 @@ export const ChatPreview: React.FC<ChatPreviewProps> = ({ title, messages, platf
       </div>
 
       {/* Document Canvas - Clean PDF Style */}
-      <div id="print-area" className="bg-white shadow-2xl rounded-3xl border border-slate-200/80 mx-auto w-full max-w-[210mm] overflow-auto transition-shadow duration-300 hover:shadow-3xl">
-        
-        {/* Document Header - Simple & Clean */}
-        <div className="px-8 py-4 border-b-2 border-slate-900">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-1">{title}</h1>
-          <div className="flex items-center gap-3 text-sm text-slate-600">
-            <span>{date}</span>
-            <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
-            <span>{messages.length} messages</span>
-            <span className="w-1 h-1 bg-slate-400 rounded-full"></span>
-            <span>{totalWords.toLocaleString()} words</span>
-          </div>
-        </div>
+      <div id="print-area" className="bg-white shadow-2xl rounded-3xl border border-slate-200/80 mx-auto w-full max-w-[210mm] overflow-auto transition-shadow duration-300 hover:shadow-3xl print:shadow-none print:rounded-none print:border-none print:max-w-none print:m-0 print:p-0 print:overflow-visible">
 
         {/* Chat Messages - Clean Layout */}
-        <div className="px-8 py-4 space-y-3">
+        <div className="px-8 py-4 space-y-3 print:px-0 print:py-0 print:space-y-1">
           {messages.map((msg, index) => {
             const isUser = msg.role === MessageRole.USER;
             const roleLabel = msg.role === MessageRole.SYSTEM ? 'System' : isUser ? 'You' : 'Assistant';
             
             return (
-              <article key={index} className="message-block message-card border-l-4 pl-4" style={{
+              <article key={index} className="message-block message-card border-l-4 pl-4 print:border-l-2 print:pl-2 print:mb-2" style={{
                 borderLeftColor: isUser ? '#64748b' : '#10b981'
               }}>
                 {/* Simple Header */}
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-bold" style={{
+                <div className="flex items-center gap-2 mb-1 print:mb-0.5">
+                  <span className="text-sm font-bold print:text-xs" style={{
                     color: isUser ? '#64748b' : '#10b981'
                   }}>{roleLabel}</span>
-                  <span className="text-xs text-slate-400">•</span>
-                  <span className="text-xs text-slate-400">Message {index + 1}</span>
                 </div>
                 
                 {/* Message Content */}
@@ -171,7 +157,7 @@ export const ChatPreview: React.FC<ChatPreviewProps> = ({ title, messages, platf
                                   {children}
                                 </a>
                               ),
-                              hr: () => <hr className="my-2 print:my-1 border-slate-200" />,
+                              hr: () => <div className="my-2 h-px bg-slate-200 print:hidden print:m-0 print:h-0" aria-hidden="true" />,
                               table: ({children}) => (
                                 <div className="overflow-x-auto my-2 print:my-1.5">
                                   <table className="min-w-full border border-slate-200 rounded-lg overflow-hidden">
@@ -192,8 +178,8 @@ export const ChatPreview: React.FC<ChatPreviewProps> = ({ title, messages, platf
         </div>
 
         {/* Document Footer - Simple */}
-        <div className="border-t border-slate-200 px-8 py-3">
-          <div className="flex items-center justify-between text-xs text-slate-500">
+        <div className="border-t border-slate-200 px-8 py-3 print:px-0 print:py-1">
+          <div className="flex items-center justify-between text-xs text-slate-500 print:text-[8pt]">
             <span>Chat2PDF</span>
             <span>{date}</span>
           </div>
